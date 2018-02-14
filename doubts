@@ -1,0 +1,5 @@
+should we include sentenct start and end states in pos_tags
+
+In add one smoothing:
+    we increase the count for each occurance, shouldn't we increase the count
+    for POS tags too?
