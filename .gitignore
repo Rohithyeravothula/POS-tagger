@@ -1,4 +1,5 @@
 .idea
+tests
 *.zip
 data
 *.pyc

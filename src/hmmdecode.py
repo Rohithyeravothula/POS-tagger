@@ -1,9 +1,11 @@
 import pickle
 import re
+from decimal import Decimal
 from math import inf
+
 from debugHelpers import print_matrix
 
-ninf = -1*inf
+ninf = -1*Decimal(inf)
 START_STATE = "**sentence**start**"
 END_STATE = "**sentence**end**"
 
@@ -57,7 +59,10 @@ def viterbi(transition, emission, tags, sentence):
 
     for tag_index in range(0, l):
         emission_prob = get_emission_prob(emission, (sentence[0], tags[tag_index]))
+        # print("emission: {} {} {} {}".format(sentence[0], tags[tag_index], emission_prob, transition[(START_STATE, tags[tag_index])]))
         viterbi_prob[tag_index][0] = transition[(START_STATE, tags[tag_index])] + emission_prob
+
+    # print_matrix(viterbi_prob)
 
     # print_matrix(viterbi_prob)
 
@@ -127,4 +132,4 @@ def tag_data(input_file, model_file):
     print(correct, wrong)
 
 
-tag_data("../data/test.txt", "../data/english_model.txt")
+tag_data("../data/zh_dev_tagged.txt", "../data/english_model.txt")

@@ -2,6 +2,7 @@ import math
 import pickle
 import re
 from collections import Counter
+from decimal import Decimal
 
 START_STATE = "**sentence**start**"
 END_STATE = "**sentence**end**"
@@ -30,8 +31,6 @@ def add_one_smoothing(transition, pos_tags):
     for tag in tags:
         for trans_tag in tags:
             transition[(tag, trans_tag)] += 1
-            pos_tags[trans_tag] += 1
-            pos_tags[tag] += 1
 
 
 
@@ -69,15 +68,20 @@ def parse(input_file, output_file):
 
 
     add_one_smoothing(transition, pos_tags)
+    tags = list(pos_tags.keys())
+    tags_length = len(tags)
     for pair in emission:
         (word, tag) = pair
-        emission[pair] = math.log(emission[pair] / frequency[word])
+        # emission[pair] = math.log(emission[pair] / frequency[word])
+        emission[pair] = Decimal.log10(Decimal(emission[pair]) / Decimal(frequency[word]))
 
     for pair in transition:
         (tag1, tag2) = pair
-        transition[pair] = math.log(transition[pair] / pos_tags[tag1])
+        # ToDo: should be pushed into one smoothing
+        transition[pair] = Decimal.log10(Decimal(transition[pair]) / (tags_length + Decimal(pos_tags[tag1])))
 
-    # print(transition)
+    print(transition)
+    # print(emission)
     # remember: remove start and end states from pos tags
     del pos_tags[START_STATE]
     del pos_tags[END_STATE]
@@ -86,5 +90,6 @@ def parse(input_file, output_file):
 
 
 if __name__ == '__main__':
+    # parse("../data/en_train_tagged.txt", "../data/english_model.txt")
+    parse("../data/train.txt", "../data/english_model.txt")
     # parse("../data/train.txt", "../data/english_model.txt")
-    parse("../data/en_train_tagged.txt", "../data/english_model.txt")
