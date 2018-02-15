@@ -1,11 +1,11 @@
 import pickle
 import re
 from math import inf
+from debugHelpers import print_matrix
 
 ninf = -1*inf
 START_STATE = "**sentence**start**"
 END_STATE = "**sentence**end**"
-
 
 def construct_dict(data, dict):
     for entry in data:
@@ -59,6 +59,7 @@ def viterbi(transition, emission, tags, sentence):
         emission_prob = get_emission_prob(emission, (sentence[0], tags[tag_index]))
         viterbi_prob[tag_index][0] = transition[(START_STATE, tags[tag_index])] + emission_prob
 
+    # print_matrix(viterbi_prob)
 
     for word_index in range(1, w):
         for tag_index in range(0, l):
@@ -70,15 +71,18 @@ def viterbi(transition, emission, tags, sentence):
                     max_prob = cur_prob
                     max_node = prev_tag_index
             emission_prob = get_emission_prob(emission, (sentence[word_index], tags[tag_index]))
+            # print("emission: {} {} {} {}".format(sentence[word_index], tags[tag_index], emission_prob, max_prob))
             viterbi_prob[tag_index][word_index] = max_prob + emission_prob
             backpointer[tag_index][word_index] = max_node
 
-    # ToDo: add end state, and choose the max element
+    # print_matrix(viterbi_prob)
+    # print_matrix(backpointer)
+
     max_prob = ninf
     max_node = None
     for tag_index in range(0, l):
         cur_prob = transition[(tags[tag_index], END_STATE)] + viterbi_prob[tag_index][w-1]
-        if cur_prob > max_prob:
+        if cur_prob >= max_prob:
             max_prob = cur_prob
             max_node = tag_index
     back_start = max_node
@@ -87,14 +91,40 @@ def viterbi(transition, emission, tags, sentence):
     return result
 
 
+def computer_error(actual, predicted):
+    hit=0
+    l = len(actual)
+    for i in range(0, l):
+        if actual[i] == predicted[i]:
+            hit+=1
+    return hit, l-hit
+
+
+
 def tag_data(input_file, model_file):
     transition, emission, pos_tags = read_ds(model_file)
     tags = list(pos_tags.keys())
+    correct = 0
+    wrong = 0
     with open(input_file, 'r') as file:
         data = file.read()
         sentences = data.split("\n")
+        for sentence in sentences:
+            # print(sentence)
+            words = []
+            actual = []
+            pairs = sentence.split(" ")
+            for pair in pairs:
+                word, tag = split_word(pair)
+                words.append(word)
+                actual.append(tag)
+            predicted = viterbi(transition, emission, tags, words)
+            # print(actual)
+            # print(predicted)
+            sent_hit, sent_miss = computer_error(actual, predicted)
+            correct += sent_hit
+            wrong += sent_miss
+    print(correct, wrong)
 
-    for sentence in sentences:
-        viterbi(transition, emission, tags, sentence.split(" "))
 
 tag_data("../data/test.txt", "../data/english_model.txt")
