@@ -4,5 +4,7 @@ In add one smoothing:
     we increase the count for each occurance, shouldn't we increase the count
     for POS tags too?
 
-can we lookout for cases in case of unseen interms of case
-(Suppose vs suppose)
+
+what happens in case of extra new lines
+
+unknown words, how to handle in viterbi algorithm
