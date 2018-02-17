@@ -1,8 +1,7 @@
-import math
-import pickle
 import re
+import json
 from collections import Counter
-from decimal import Decimal
+import math
 
 START_STATE = "**sentence**start**"
 END_STATE = "**sentence**end**"
@@ -16,8 +15,8 @@ def split_word(pair):
 
 
 def write_ds(dictdata, output_file):
-    with open(output_file, 'wb') as file:
-        pickle.dump(dictdata, file)
+    with open(output_file, 'w') as file:
+        json.dump(dictdata, file, ensure_ascii=False, indent=0)
 
 
 def add_one_smoothing(transition, pos_tags):
@@ -31,6 +30,23 @@ def add_one_smoothing(transition, pos_tags):
     for tag in tags:
         for trans_tag in tags:
             transition[(tag, trans_tag)] += 1
+
+
+def get_dict_matrix(probabilities):
+    matrix = {}
+    for (t1, t2) in probabilities.keys():
+        if t1 not in matrix:
+            matrix[t1] = {}
+        matrix[t1][t2] = probabilities[(t1, t2)]
+    return matrix
+
+
+def overal_pos_dist(pos_tags):
+    total = sum(pos_tags.values())
+    unknown = {}
+    for (key, val) in pos_tags.items():
+        unknown[key] = math.log(val/total)
+    return unknown
 
 
 
@@ -68,28 +84,25 @@ def parse(input_file, output_file):
 
 
     add_one_smoothing(transition, pos_tags)
+    # print(get_dict_matrix(dict(transition)))
     tags = list(pos_tags.keys())
     tags_length = len(tags)
     for pair in emission:
         (word, tag) = pair
-        # emission[pair] = math.log(emission[pair] / frequency[word])
-        emission[pair] = Decimal.log10(Decimal(emission[pair]) / Decimal(frequency[word]))
+        emission[pair] = math.log(emission[pair] / pos_tags[tag])
 
     for pair in transition:
         (tag1, tag2) = pair
         # ToDo: should be pushed into one smoothing
-        transition[pair] = Decimal.log10(Decimal(transition[pair]) / (tags_length + Decimal(pos_tags[tag1])))
+        transition[pair] = math.log(transition[pair] / (tags_length + pos_tags[tag1]))
 
-    print(transition)
-    # print(emission)
     # remember: remove start and end states from pos tags
     del pos_tags[START_STATE]
     del pos_tags[END_STATE]
-    # print(pos_tags)
-    write_ds([transition, emission, pos_tags], output_file)
+    write_ds([get_dict_matrix(transition), get_dict_matrix(emission), pos_tags, overal_pos_dist(pos_tags)], output_file)
 
 
 if __name__ == '__main__':
+    # parse("../data/zh_train_tagged.txt", "../data/english_model.txt")
     # parse("../data/en_train_tagged.txt", "../data/english_model.txt")
     parse("../data/train.txt", "../data/english_model.txt")
-    # parse("../data/train.txt", "../data/english_model.txt")
