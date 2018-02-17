@@ -2,6 +2,7 @@ import re
 import json
 from collections import Counter
 import math
+import sys
 
 START_STATE = "**sentence**start**"
 END_STATE = "**sentence**end**"
@@ -103,6 +104,5 @@ def parse(input_file, output_file):
 
 
 if __name__ == '__main__':
-    # parse("../data/zh_train_tagged.txt", "../data/english_model.txt")
-    # parse("../data/en_train_tagged.txt", "../data/english_model.txt")
-    parse("../data/train.txt", "../data/english_model.txt")
+    train_file = sys.argv[1]
+    parse(train_file, "hmmmodel.txt")

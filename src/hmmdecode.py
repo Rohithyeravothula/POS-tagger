@@ -1,8 +1,7 @@
 import json
 import re
 from math import inf
-from collections import defaultdict
-
+import sys
 
 ninf = -1*inf
 START_STATE = "**sentence**start**"
@@ -131,6 +130,10 @@ def computer_error(actual, predicted):
     return hit, l-hit
 
 
+def write_output(output):
+    with open("hmmoutput.txt", 'w') as file:
+        file.write("\n".join(output))
+
 
 def tag_data(input_file, model_file):
     transition, emission, pos_tags, unknown = read_ds(model_file)
@@ -138,28 +141,29 @@ def tag_data(input_file, model_file):
     tags = list(pos_tags.keys())
     correct = 0
     wrong = 0
+    output = []
     with open(input_file, 'r') as file:
         data = file.read()
         sentences = data.split("\n")
         for sentence in sentences:
+            if not sentence:
+                output.append("")
+                continue
+            sentence_output = []
             # print(sentence)
-            words = []
-            actual = []
-            pairs = sentence.split(" ")
-            for pair in pairs:
-                word, tag = split_word(pair)
-                words.append(word)
-                actual.append(tag)
+            words = sentence.split(" ")
             predicted = viterbi(transition, emission, tags, unknown, words)
+            l = len(words)
+            for i in range(0, l):
+                sentence_output.append("/".join([words[i], predicted[i]]))
+            output.append(" ".join(sentence_output))
             # print(actual)
             # print(predicted)
-            sent_hit, sent_miss = computer_error(actual, predicted)
-            correct += sent_hit
-            wrong += sent_miss
-    print(correct, wrong, 100*(correct/(correct+wrong)))
+    write_output(output)
 
 
 # tag_data("../data/en_dev_tagged.txt", "../data/english_model.txt")
 # tag_data("../data/zh_dev_tagged.txt", "../data/english_model.txt")
 if __name__=='__main__':
-    tag_data("../data/test.txt", "../data/english_model.txt")
+    test_file = sys.argv[1]
+    tag_data(test_file, "hmmmodel.txt")
