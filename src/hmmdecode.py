@@ -167,3 +167,5 @@ def tag_data(input_file, model_file):
 if __name__=='__main__':
     test_file = sys.argv[1]
     tag_data(test_file, "hmmmodel.txt")
+    # tag_data("../data/test.txt", "../data/english_model.txt")
+    # tag_data("../data/catalan_dev_tagged.txt", "../data/catalan_model.txt")

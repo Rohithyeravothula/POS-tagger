@@ -106,3 +106,7 @@ def parse(input_file, output_file):
 if __name__ == '__main__':
     train_file = sys.argv[1]
     parse(train_file, "hmmmodel.txt")
+    # parse("../data/zh_train_tagged.txt", "../data/english_model.txt")
+    # parse("../data/en_train_tagged.txt", "../data/english_model.txt")
+    # parse("../data/catalan_train_tagged.txt", "../data/catalan_model.txt")
+    # parse("../data/train.txt", "../data/english_model.txt")
