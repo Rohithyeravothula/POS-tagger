@@ -150,22 +150,37 @@ def tag_data(input_file, model_file):
                 output.append("")
                 continue
             sentence_output = []
-            # print(sentence)
-            words = sentence.split(" ")
+            words = []
+            actual = []
+            pairs = sentence.split(" ")
+            for pair in pairs:
+                word, tag = split_word(pair)
+                words.append(word)
+                actual.append(tag)
             predicted = viterbi(transition, emission, tags, unknown, words)
-            l = len(words)
-            for i in range(0, l):
-                sentence_output.append("/".join([words[i], predicted[i]]))
-            output.append(" ".join(sentence_output))
             # print(actual)
             # print(predicted)
-    write_output(output)
+            sent_hit, sent_miss = computer_error(actual, predicted)
+            correct += sent_hit
+            wrong += sent_miss
+        print(correct, wrong, 100 * (correct / (correct + wrong)))
+
+    #         # print(sentence)
+    #         words = sentence.split(" ")
+    #         predicted = viterbi(transition, emission, tags, unknown, words)
+    #         l = len(words)
+    #         for i in range(0, l):
+    #             sentence_output.append("/".join([words[i], predicted[i]]))
+    #         output.append(" ".join(sentence_output))
+    #         # print(actual)
+    #         # print(predicted)
+    # write_output(output)
 
 
 # tag_data("../data/en_dev_tagged.txt", "../data/english_model.txt")
 # tag_data("../data/zh_dev_tagged.txt", "../data/english_model.txt")
 if __name__=='__main__':
-    test_file = sys.argv[1]
-    tag_data(test_file, "hmmmodel.txt")
-    # tag_data("../data/test.txt", "../data/english_model.txt")
+    # test_file = sys.argv[1]
+    # tag_data(test_file, "hmmmodel.txt")
+    tag_data("../data/test.txt", "../data/english_model.txt")
     # tag_data("../data/catalan_dev_tagged.txt", "../data/catalan_model.txt")

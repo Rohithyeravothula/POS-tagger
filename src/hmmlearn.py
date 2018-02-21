@@ -8,6 +8,7 @@ START_STATE = "**sentence**start**"
 END_STATE = "**sentence**end**"
 
 
+
 def split_word(pair):
     splits = re.split('(/)', pair)
     tag = splits[-1]
@@ -33,6 +34,13 @@ def add_one_smoothing(transition, pos_tags):
             transition[(tag, trans_tag)] += 1
 
 
+def get_transition_prob(transition, pos_tags, tags_length):
+    for pair in transition:
+        (tag1, tag2) = pair
+        # ToDo: should be pushed into one smoothing
+        transition[pair] = math.log(transition[pair] / (tags_length + pos_tags[tag1]))
+
+
 def get_dict_matrix(probabilities):
     matrix = {}
     for (t1, t2) in probabilities.keys():
@@ -42,13 +50,24 @@ def get_dict_matrix(probabilities):
     return matrix
 
 
+def over_unknown_one(emission, pos_tags):
+    pairs = Counter()
+    for key in emission.keys():
+        if emission[key] == 1:
+            pairs[key[1]] += 1
+    for key in pos_tags:
+        if key not in pairs:
+            pairs[key] = 1
+    return overal_pos_dist(pairs)
+
+
+
 def overal_pos_dist(pos_tags):
     total = sum(pos_tags.values())
     unknown = {}
     for (key, val) in pos_tags.items():
-        unknown[key] = math.log(val/total)
+        unknown[key] = math.log(val / total)
     return unknown
-
 
 
 def parse(input_file, output_file):
@@ -83,24 +102,24 @@ def parse(input_file, output_file):
         frequency[word] += 1
         transition[(tag, END_STATE)] += 1
 
-
     add_one_smoothing(transition, pos_tags)
-    # print(get_dict_matrix(dict(transition)))
     tags = list(pos_tags.keys())
     tags_length = len(tags)
+
+    unknown = over_unknown_one(emission, pos_tags)
+    # print(unknown)
+
     for pair in emission:
         (word, tag) = pair
         emission[pair] = math.log(emission[pair] / pos_tags[tag])
 
-    for pair in transition:
-        (tag1, tag2) = pair
-        # ToDo: should be pushed into one smoothing
-        transition[pair] = math.log(transition[pair] / (tags_length + pos_tags[tag1]))
+    get_transition_prob(transition, pos_tags, tags_length)
 
     # remember: remove start and end states from pos tags
     del pos_tags[START_STATE]
     del pos_tags[END_STATE]
-    write_ds([get_dict_matrix(transition), get_dict_matrix(emission), pos_tags, overal_pos_dist(pos_tags)], output_file)
+    write_ds([get_dict_matrix(transition), get_dict_matrix(emission), pos_tags,
+              unknown], output_file)
 
 
 if __name__ == '__main__':
