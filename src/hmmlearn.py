@@ -61,6 +61,17 @@ def over_unknown_one(emission, pos_tags):
     return overal_pos_dist(pairs)
 
 
+def over_unknow_two(emission, pos_tags):
+    freq = Counter()
+    for (key, val) in emission:
+        freq[key] += 1
+    valid = {}
+    for (key, val) in emission:
+        if freq[key] == 1:
+            valid[(key, val)] = emission[(key, val)]
+    return over_unknown_one(valid, pos_tags)
+
+
 
 def overal_pos_dist(pos_tags):
     total = sum(pos_tags.values())
@@ -106,8 +117,8 @@ def parse(input_file, output_file):
     tags = list(pos_tags.keys())
     tags_length = len(tags)
 
-    unknown = over_unknown_one(emission, pos_tags)
-    # print(unknown)
+    # unknown = over_unknown_one(emission, pos_tags)
+    unknown = over_unknow_two(emission, pos_tags)
 
     for pair in emission:
         (word, tag) = pair

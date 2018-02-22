@@ -36,11 +36,6 @@ def read_ds(input_file):
     return transition, emission, pos_tags, unknown
 
 
-# def get_emission_prob(emission, key):
-#     if key in emission:
-#         return emission[key]
-#     return ninf
-
 def get_emission_prob(emission, word, tag, unknown):
     if word in emission:
         if tag in emission[word]:
@@ -68,6 +63,38 @@ def decode_viterbi(backpointer, tags, prev, w, l):
         tag_index = backpointer[tag_index][word_index]
         word_index -= 1
     return result_tags[::-1]
+
+
+def read_sentences_with_tags(input_file):
+    words = []
+    tags = []
+    with open(input_file, 'r') as file:
+        data = file.read()
+        sentences = data.split("\n")
+        for sentence in sentences:
+            pairs = sentence.split(" ")
+            sentence_words = []
+            sentence_tags = []
+            for pair in pairs:
+                word, tag = split_word(pair)
+                sentence_words.append(word)
+                sentence_tags.append(tag)
+            words.append(sentence_words)
+            tags.append(sentence_tags)
+    return words, tags
+
+
+def read_untagged_sentences(input_file):
+    with open(input_file, 'r') as file:
+        data = file.read()
+        sentences = data.split("\n")
+        words = []
+        for sentence in sentences:
+            if sentence:
+                words.append(sentence.split(" "))
+            else:
+                words.append([])
+        return words, None
 
 
 def viterbi(transition, emission, tags, unknown, sentence):
@@ -135,52 +162,45 @@ def write_output(output):
         file.write("\n".join(output))
 
 
+def compute_hits(actual, predicted):
+    l = len(actual)
+    correct = 0
+    total = 0
+    for i in range(0, l):
+        total += len(actual[i])
+        hits, misses = computer_error(actual[i], predicted[i])
+        correct +=  hits
+    print(correct, total, 100*(correct/total))
+
+
+
 def tag_data(input_file, model_file):
     transition, emission, pos_tags, unknown = read_ds(model_file)
-    # print(emission)
     tags = list(pos_tags.keys())
-    correct = 0
-    wrong = 0
+    # sentences, actual_tags = read_sentences_with_tags(input_file)
+    sentences, actual_tags = read_untagged_sentences(input_file)
     output = []
-    with open(input_file, 'r') as file:
-        data = file.read()
-        sentences = data.split("\n")
-        for sentence in sentences:
-            if not sentence:
-                output.append("")
-                continue
-            sentence_output = []
-            words = []
-            actual = []
-            pairs = sentence.split(" ")
-            for pair in pairs:
-                word, tag = split_word(pair)
-                words.append(word)
-                actual.append(tag)
-            predicted = viterbi(transition, emission, tags, unknown, words)
-            # print(actual)
-            # print(predicted)
-            sent_hit, sent_miss = computer_error(actual, predicted)
-            correct += sent_hit
-            wrong += sent_miss
-        print(correct, wrong, 100 * (correct / (correct + wrong)))
-
-    #         # print(sentence)
-    #         words = sentence.split(" ")
-    #         predicted = viterbi(transition, emission, tags, unknown, words)
-    #         l = len(words)
-    #         for i in range(0, l):
-    #             sentence_output.append("/".join([words[i], predicted[i]]))
-    #         output.append(" ".join(sentence_output))
-    #         # print(actual)
-    #         # print(predicted)
-    # write_output(output)
+    predicted_tags = []
+    for sentence in sentences:
+        if sentence:
+            sentence_predicted = viterbi(transition, emission, tags, unknown, sentence)
+            # print(sentence, sentence_predicted)
+            predicted_tags.append(sentence_predicted)
+            output.append(["{}/{}".format(word, tag) for (word, tag) in zip(sentence, sentence_predicted)])
+        else:
+            output.append([])
+    # compute_hits(actual_tags, predicted_tags)
+    result = []
+    for sentence in output:
+        result.append(" ".join(sentence))
+    write_output(result)
 
 
-# tag_data("../data/en_dev_tagged.txt", "../data/english_model.txt")
-# tag_data("../data/zh_dev_tagged.txt", "../data/english_model.txt")
+
 if __name__=='__main__':
-    # test_file = sys.argv[1]
-    # tag_data(test_file, "hmmmodel.txt")
-    tag_data("../data/test.txt", "../data/english_model.txt")
+    test_file = sys.argv[1]
+    tag_data(test_file, "hmmmodel.txt")
+    # tag_data("../data/test.txt", "../data/english_model.txt")
+    # tag_data("../data/test_raw.txt", "../data/english_model.txt")
+    # tag_data("../data/en_dev_tagged.txt", "../data/english_model.txt")
     # tag_data("../data/catalan_dev_tagged.txt", "../data/catalan_model.txt")

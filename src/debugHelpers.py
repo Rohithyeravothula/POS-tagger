@@ -3,16 +3,19 @@ from hmmdecode import *
 import time
 
 english_train="../data/en_train_tagged.txt"
+english_test_untagged = "../data/en_dev_raw.txt"
 english_test="../data/en_dev_tagged.txt"
 english_output="../data/english_model.txt"
 
 chinese_train="../data/zh_train_tagged.txt"
 chinese_test="../data/zh_dev_tagged.txt"
+chinese_test_untagged = "../data/zh_dev_raw.txt"
 chinese_output="../data/chinese_model.txt"
 
 catalan_train="../data/catalan_train_tagged.txt"
 catalan_output="../data/catalan_model.txt"
 catalan_test="../data/catalan_dev_tagged.txt"
+catalan_test_sandeep = "../data/sandeep.txt"
 
 
 def get_time_2arg(f):
@@ -30,7 +33,18 @@ def get_accuracy(train, model, test, lang=None):
     tag_data(test, model)
     print("{} test: {}".format(lang, time.time() - test_start))
 
-if __name__=='__main__':
+
+def dev_test():
     get_accuracy(english_train, english_output, english_test, "english")
     get_accuracy(chinese_train, chinese_output, chinese_test, "chinese")
     get_accuracy(catalan_train, catalan_output, catalan_test, "catalan")
+
+
+def submit_test():
+    get_accuracy(english_train, english_output, english_test_untagged, "english")
+    get_accuracy(chinese_train, chinese_output, chinese_test_untagged, "chinese")
+
+if __name__=='__main__':
+    # dev_test()
+    submit_test()
+
